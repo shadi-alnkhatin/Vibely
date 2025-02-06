@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal,CircleX } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import Modal from '@/components/Modal';
+import Comments from './Comments';
+import LikeButton from './LikeButton';
 
 export default function Posts() {
     const [posts, setPosts] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+    const [showModal, setShowModal] = useState(false); // State for showing/hiding modal
+    const [activePostId, setActivePostId] = useState(null); // Store the active post id
 
-
+    // Fetch posts from API
     useEffect(() => {
         axios.get('/posts')
-            .then(response => setPosts(response.data.posts))
+            .then(response => {
+                console.log(response.data);
+                setPosts(response.data.posts)})
             .catch(error => console.error("Error fetching posts:", error));
     }, []);
 
-    const openModal = (post) => {
-        setShowModal(true);
+    // Open the comment modal for a specific post
+    const openCommentModal = (postId) => {
+        setActivePostId(postId); // Set the active post id
+        setShowModal(true); // Show the modal
     };
-
 
     return (
         <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
@@ -70,11 +76,13 @@ export default function Posts() {
                     <div className="px-4 py-3 border-t border-gray-100">
                         <div className="flex items-center justify-between">
                             <div className="flex space-x-4">
-                                <button className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition">
-                                    <Heart className="w-5 h-5" />
-                                    <span className="text-sm">24</span>
-                                </button>
-                                <button onClick={openModal} className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition">
+
+                                <LikeButton likeableType="App\Models\Post" likeableId={post.id} initialLiked={post.is_liked} />
+
+                                <button
+                                    onClick={() => openCommentModal(post.id)}
+                                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition"
+                                >
                                     <MessageCircle className="w-5 h-5" />
                                     <span className="text-sm">12</span>
                                 </button>
@@ -88,34 +96,14 @@ export default function Posts() {
                 </div>
             ))}
 
-<Modal show={showModal} onClose={() => setShowModal(false)}>
-            <div className="p-4">
-                {/* Header Section */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h3 className="text-lg font-semibold">Comments</h3>
-                    <button className="btn btn-light" onClick={() => setShowModal(false)}>
-                        <CircleX size={20} />
-                    </button>
-                </div>
-
-                {/* Comments Section */}
-                <p className="text-muted">No comments yet.</p>
-
-                {/* Comment Form */}
-                <form>
-                    <div className="input-group mb-3">
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Write a comment..."
-                        />
-                        <button type="submit" className="btn btn-primary">
-                            Comment
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </Modal>
+            {/* Comment Modal */}
+            {showModal && activePostId && (
+                <Comments
+                    postId={activePostId}
+                    showModal={showModal}
+                    setShowModal={setShowModal}
+                />
+            )}
         </div>
     );
 }

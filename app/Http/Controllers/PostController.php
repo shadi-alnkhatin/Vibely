@@ -10,19 +10,12 @@ use Inertia\Inertia;
 
 class PostController extends Controller
 {
-    private $userID;
-
-    public function __construct()
-    {
-        $this->userID = Auth::id();
-    }    /**
+     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // Fetch all posts with their associated user, ordered by latest first
-        $posts = Post::with('user')->latest()->get();
-
+        $posts = Post::with(['user'])->latest()->get();
         return response()->json(['posts' => $posts]);
     }
 
@@ -47,7 +40,7 @@ class PostController extends Controller
         ]);
 
         $post = new Post();
-        $post->user_id = $this->userID;
+        $post->user_id = Auth::id();
         $post->content = $request->content;
         $post->save();
 
@@ -57,10 +50,8 @@ class PostController extends Controller
             $post->image = Storage::url($imagePath);
             $post->save();
         }
-        return Inertia::render('Dashboard', [
-            'posts' => Post::latest()->get(),
-            'successMessage' => 'Post created successfully!'
-        ]);    }
+        return Inertia::location('/dashboard');
+    }
 
     /**
      * Display the specified resource.

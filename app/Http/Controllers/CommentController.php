@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 
 class CommentController extends Controller
 {
@@ -29,21 +31,29 @@ class CommentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'content' =>'required|string|min:1',
-            'user_id' =>'required|integer',
-            'post_id' =>'required|integer'
+            'content' => 'required|string|min:1',
+            'post_id' => 'required|integer'
         ]);
-        Comment::create($request->all());
-        return response()->json(['message' => 'Comment created successfully']);
+
+        $comment = Comment::create([
+            'content' => $request->content,
+            'post_id' => $request->post_id,
+            'user_id' => Auth::id()
+        ]);
+
+        // Load user relationship
+        $comment->load('user');
+
+        return response()->json(['comment' => $comment]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($postID)
+    public function show($postId)
     {
-        $comments=Comment::with('user')->where('post_id',$postID)->latest()->get();
-        return response()->json($comments);
+        $comments=Comment::with('user')->where('post_id',$postId)->latest()->get();
+        return response()->json(['comments'=>$comments]);
     }
 
     /**

@@ -3,6 +3,7 @@
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\LikeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
@@ -34,6 +35,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts',[PostController::class,'index'])->name('post.index');
 
     Route::post('/comment/create',[CommentController::class,'store'])->name('comment.store');
+    Route::get('/post/comments/{postId}',[CommentController::class,'show'])->name('comment.index');
+
+    Route::post('/like', [LikeController::class, 'store']);
+    Route::delete('/like', [LikeController::class, 'destroy']);
 
 });
 

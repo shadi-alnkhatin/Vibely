@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router, useForm} from '@inertiajs/react';
+import { router} from '@inertiajs/react';
 
 function CreatePost() {
     const [content, setContent] = useState('');
