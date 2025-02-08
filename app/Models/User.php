@@ -53,4 +53,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
+
+    // Users who sent friend requests
+    public function sentFriendRequests()
+    {
+        return $this->hasMany(Friendship::class, 'user_id');
+    }
+
+    // Users who received friend requests
+    public function receivedFriendRequests()
+    {
+        return $this->hasMany(Friendship::class, 'friend_id');
+    }
+
+    // Get confirmed friends
+    public function friends()
+    {
+        return $this->belongsToMany(User::class, 'friendships', 'user_id', 'friend_id')
+                    ->wherePivot('status', 'accepted');
+    }
 }

@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-
-
+use App\Http\Controllers\FriendshipController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -27,6 +26,10 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/add-friends', function () {
+        return Inertia::render('AddFriend');
+    });
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -39,7 +42,11 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/like', [LikeController::class, 'store']);
     Route::delete('/like', [LikeController::class, 'destroy']);
-
+    Route::get('/people-you-may-know', [FriendshipController::class, 'peopleYouMayKnow']);
+    Route::post('/add-friend', [FriendshipController::class,'store']);
+    Route::get('/friends/pending', [FriendshipController::class, 'FriendsRequest']);
+    Route::post('/accept/friend/{friendId}', [FriendshipController::class, 'acceptFriendRequest']);
+    Route::delete('reject/friend/{friendId}', [FriendshipController::class,'rejectFriendRequest']);
 });
 
 
