@@ -50,6 +50,7 @@ class FriendshipController extends Controller
             ->get();
         return response()->json(['pending_requests' => $pendingRequests]);
     }
+
     public function acceptFriendRequest($friendId){
         $friendship = Friendship::where('user_id', $friendId)
             ->where('friend_id', Auth::id())
@@ -63,6 +64,8 @@ class FriendshipController extends Controller
             return response()->json(['message' => 'Friend request not found or already accepted']);
         }
     }
+
+
     public function rejectFriendRequest($friendId){
         $friendship = Friendship::where('user_id', $friendId)
             ->where('friend_id', Auth::id())
@@ -75,14 +78,37 @@ class FriendshipController extends Controller
             return response()->json(['message' => 'Friend request not found or already accepted']);
         }
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+    public function cancelFriendRequest($friendId){
+        $friendship=Friendship::where('user_id',Auth::id())
+        ->where('friend_id', $friendId)
+        ->where('status', 'pending')
+        ->first();
+        if($friendship){
+            $friendship->delete();
+            return response()->json(['message' => 'Friend request cancelled successfully']);
+        }
+        return response()->json(['message' => 'Friend request not found or already accepted']);
     }
+
+    public function deleteFriend($friendId){
+        $authUserId=Auth::id();
+
+        $friendship = Friendship::where(function ($query) use ($authUserId, $friendId) {
+            $query->where('user_id', $authUserId)
+                  ->where('friend_id', $friendId);
+        })->orWhere(function ($query) use ($authUserId, $friendId) {
+            $query->where('user_id', $friendId)
+                  ->where('friend_id', $authUserId);
+        })->first();
+        if($friendship){
+            $friendship->delete();
+            return response()->json(['message' => 'Friend deleted successfully']);
+        }
+        return response()->json(['message' => 'Friend not found']);
+    }
+
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -102,29 +128,10 @@ class FriendshipController extends Controller
         return response()->json(['friendship_request' => $friendship]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Friendship $friendship)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Friendship $friendship)
-    {
-        //
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Friendship $friendship)
-    {
-        //
-    }
+
+
 
     /**
      * Remove the specified resource from storage.

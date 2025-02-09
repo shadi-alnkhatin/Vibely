@@ -29,4 +29,8 @@ class Post extends Model
     {
         return Auth::check() && $this->likes()->where('user_id', Auth::id())->exists();
     }
+
+    public function comments(){
+        return $this->hasMany(Comment::class);
+    }
 }

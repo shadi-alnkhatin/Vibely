@@ -4,6 +4,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
@@ -45,8 +46,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/people-you-may-know', [FriendshipController::class, 'peopleYouMayKnow']);
     Route::post('/add-friend', [FriendshipController::class,'store']);
     Route::get('/friends/pending', [FriendshipController::class, 'FriendsRequest']);
-    Route::post('/accept/friend/{friendId}', [FriendshipController::class, 'acceptFriendRequest']);
-    Route::delete('reject/friend/{friendId}', [FriendshipController::class,'rejectFriendRequest']);
+    Route::put('/accept/friend/{friendId}', [FriendshipController::class, 'acceptFriendRequest']);
+    Route::delete('/reject/friend/{friendId}', [FriendshipController::class,'rejectFriendRequest']);
+    Route::delete('/remove/friend/{friendId}', [FriendshipController::class,'deleteFriend']);
+    Route::delete('/cancel/friend/{friendId}', [FriendshipController::class,'cancelFriendRequest']);
+
+
+
+    Route::get('/user/profile/{userId}', [UserController::class, 'profile']);
+    Route::get('/user/friends/{userId}', [UserController::class, 'friends']);
+    Route::get('/user/posts/{userId}', [UserController::class, 'UserPosts']);
 });
 
 

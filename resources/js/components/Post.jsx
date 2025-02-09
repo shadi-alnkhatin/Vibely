@@ -3,32 +3,41 @@ import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import Modal from '@/components/Modal';
 import Comments from './Comments';
 import LikeButton from './LikeButton';
+import axios from 'axios';
 
-export default function Posts() {
+export default function Posts({ userId }) {
     const [posts, setPosts] = useState([]);
-    const [showModal, setShowModal] = useState(false); // State for showing/hiding modal
-    const [activePostId, setActivePostId] = useState(null); // Store the active post id
+    const [showModal, setShowModal] = useState(false);
+    const [activePostId, setActivePostId] = useState(null);
 
-    // Fetch posts from API
     useEffect(() => {
-        axios.get('/posts')
-            .then(response => {
-                console.log(response.data);
-                setPosts(response.data.posts)})
-            .catch(error => console.error("Error fetching posts:", error));
-    }, []);
+        if (userId) {
+            axios.get(`/user/posts/${userId}`)
+                .then(response => {
+                    console.log("User posts:", response.data);
+                    setPosts(response.data.posts);
+                })
+                .catch(error => console.error("Error fetching user posts:", error));
+        } else {
+            axios.get('/posts')
+                .then(response => {
+                    console.log("All posts:", response.data);
+                    setPosts(response.data.posts);
+                })
+                .catch(error => console.error("Error fetching posts:", error));
+        }
+    }, [userId]); // 👈 Ensure updates when userId changes
 
-    // Open the comment modal for a specific post
     const openCommentModal = (postId) => {
-        setActivePostId(postId); // Set the active post id
-        setShowModal(true); // Show the modal
+        setActivePostId(postId);
+        setShowModal(true);
     };
 
     return (
         <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
             {posts.map((post) => (
                 <div key={post.id} className="bg-white rounded-xl shadow-md mb-6 overflow-hidden">
-                    {/* Header Section */}
+                    {/* Header */}
                     <div className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
@@ -56,12 +65,12 @@ export default function Posts() {
                         </div>
                     </div>
 
-                    {/* Content Section */}
+                    {/* Content */}
                     <div className="px-4 py-2">
                         <p className="text-gray-800 whitespace-pre-wrap">{post.content}</p>
                     </div>
 
-                    {/* Image Section */}
+                    {/* Image */}
                     {post.image && (
                         <div className="mt-2">
                             <img
@@ -72,20 +81,18 @@ export default function Posts() {
                         </div>
                     )}
 
-                    {/* Engagement Section */}
+                    {/* Engagement */}
                     <div className="px-4 py-3 border-t border-gray-100">
                         <div className="flex items-center justify-between">
                             <div className="flex space-x-4">
-
                                 <LikeButton likeableType="App\Models\Post" likeableId={post.id} initialLiked={post.is_liked} likeCounter={post.likes_count} />
-
 
                                 <button
                                     onClick={() => openCommentModal(post.id)}
                                     className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition"
                                 >
                                     <MessageCircle className="w-5 h-5" />
-                                    <span className="text-sm">12</span>
+                                    <span className="text-sm">{post.comments_count}</span>
                                 </button>
                                 <button className="flex items-center space-x-2 text-gray-600 hover:text-green-500 transition">
                                     <Share2 className="w-5 h-5" />
@@ -98,7 +105,7 @@ export default function Posts() {
             ))}
 
             {/* Comment Modal */}
-            {showModal && activePostId && (
+            {showModal && activePostId !== null && (
                 <Comments
                     postId={activePostId}
                     showModal={showModal}
