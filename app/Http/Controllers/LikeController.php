@@ -43,6 +43,9 @@ class LikeController extends Controller
             'likeable_id'   => $request->likeable_id,
             'emoji'         => $request->emoji
         ]);
+        if ($request->likeable_type === Post::class) {
+            Post::where('id', $request->likeable_id)->increment('likes_count');
+        }
 
         return response()->json(['like' => $like]);
     }
@@ -88,6 +91,9 @@ class LikeController extends Controller
             'likeable_id'   => $request->likeable_id,]);
 
         $like->delete();
+        if ($request->likeable_type === Post::class) {
+            Post::where('id', $request->likeable_id)->decrement('likes_count');
+        }
         return response()->json(['message' => 'Like deleted successfully']);
 
     }

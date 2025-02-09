@@ -2,23 +2,37 @@ import React, { useEffect, useState } from 'react';
 import { CircleX } from 'lucide-react';
 import Modal from '@/components/Modal';
 import axios from 'axios';
+import Pusher from "pusher-js";
+
 
 export default function Comments({ postId, showModal, setShowModal }) {
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState([]); // Ensure it's always an array
-
+    const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+        cluster: import.meta.env.VITE_PUSHER_CLUSTER, // Required
+        forceTLS: true // Ensure it's secure
+    });
     useEffect(() => {
-        if (postId) {
-            axios.get(`/post/comments/${postId}`)
-                .then(response => {
-                    console.log(response);
-                    setComments(response.data.comments || []); // Default to [] if undefined
-                })
-                .catch(error => {
-                    console.error('Error fetching comments:', error);
-                    setComments([]); // Set an empty array if request fails
-                });
-        }
+        if (!postId) return;
+
+        axios.get(`/post/comments/${postId}`)
+            .then(response => setComments(response.data.comments || []))
+            .catch(error => {
+                console.error('Error fetching comments:', error);
+                setComments([]);
+            });
+
+        const channel = pusher.subscribe(`post.${postId}`);
+
+        channel.bind('NewComment', (event) => {
+
+            console.log("New comment received:", event.comment);
+            setComments((prevComments) => [event.comment, ...prevComments]);
+        });
+
+        return () => {
+            channel.unsubscribe();
+        };
     }, [postId]);
 
     const handleCommentSubmit = async (e) => {
@@ -96,5 +110,5 @@ export default function Comments({ postId, showModal, setShowModal }) {
         </Modal>
     );
 
-    
+
 }

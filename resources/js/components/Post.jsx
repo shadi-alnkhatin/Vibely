@@ -77,7 +77,8 @@ export default function Posts() {
                         <div className="flex items-center justify-between">
                             <div className="flex space-x-4">
 
-                                <LikeButton likeableType="App\Models\Post" likeableId={post.id} initialLiked={post.is_liked} />
+                                <LikeButton likeableType="App\Models\Post" likeableId={post.id} initialLiked={post.is_liked} likeCounter={post.likes_count} />
+
 
                                 <button
                                     onClick={() => openCommentModal(post.id)}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CommentPosted;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,7 @@ class CommentController extends Controller
 
         // Load user relationship
         $comment->load('user');
+        broadcast(new CommentPosted($comment))->toOthers();
 
         return response()->json(['comment' => $comment]);
     }
