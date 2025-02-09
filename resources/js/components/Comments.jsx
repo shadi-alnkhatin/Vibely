@@ -4,14 +4,16 @@ import Modal from '@/components/Modal';
 import axios from 'axios';
 import Pusher from "pusher-js";
 
+// Initialize Pusher once
+const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+    cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+    forceTLS: true
+});
 
 export default function Comments({ postId, showModal, setShowModal }) {
     const [comment, setComment] = useState('');
-    const [comments, setComments] = useState([]); // Ensure it's always an array
-    const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
-        cluster: import.meta.env.VITE_PUSHER_CLUSTER, // Required
-        forceTLS: true // Ensure it's secure
-    });
+    const [comments, setComments] = useState([]);
+
     useEffect(() => {
         if (!postId) return;
 
@@ -22,16 +24,21 @@ export default function Comments({ postId, showModal, setShowModal }) {
                 setComments([]);
             });
 
-        const channel = pusher.subscribe(`post.${postId}`);
+        const channelName = `post.${postId}`;
+        const channel = pusher.subscribe(channelName);
 
         channel.bind('NewComment', (event) => {
-
             console.log("New comment received:", event.comment);
-            setComments((prevComments) => [event.comment, ...prevComments]);
+            setComments(prevComments => [event.comment, ...prevComments]);
+        });
+
+        // Handle subscription errors
+        channel.bind('pusher:subscription_error', (status) => {
+            console.error('Pusher subscription error:', status);
         });
 
         return () => {
-            channel.unsubscribe();
+            pusher.unsubscribe(channelName);
         };
     }, [postId]);
 
@@ -45,14 +52,14 @@ export default function Comments({ postId, showModal, setShowModal }) {
                     post_id: postId
                 });
 
-                // Ensure new comment is added correctly
-                setComments(prevComments => [response.data.comment, ...prevComments]);
+                // setComments(prevComments => [response.data.comment, ...prevComments]);
                 setComment('');
             } catch (error) {
                 console.error('Error submitting comment:', error);
             }
         }
     };
+
     return (
         <Modal show={showModal} onClose={() => setShowModal(false)}>
             <div className="p-4">
@@ -64,7 +71,7 @@ export default function Comments({ postId, showModal, setShowModal }) {
                     </button>
                 </div>
 
-                {/* Comments Section with Scrollable Container */}
+                {/* Comments Section */}
                 <div className="overflow-auto" style={{ maxHeight: '300px' }}>
                     {comments.length > 0 ? (
                         comments.map((comment, index) => (
@@ -72,7 +79,7 @@ export default function Comments({ postId, showModal, setShowModal }) {
                                 <div className="d-flex align-items-center">
                                     <div className="mr-3">
                                         <img
-                                            src={'http://127.0.0.1:8000/storage/users-avatar/' + comment.user.avatar}
+                                            src={`http://127.0.0.1:8000/storage/users-avatar/${comment?.user?.avatar || 'default.png'}`}
                                             alt="User Avatar"
                                             className="rounded-circle"
                                             width="40"
@@ -109,6 +116,4 @@ export default function Comments({ postId, showModal, setShowModal }) {
             </div>
         </Modal>
     );
-
-
 }

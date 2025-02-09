@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Like;
 use App\Models\Post;
 use App\Models\Comment;
+use App\Events\LikeUpdated;
 
 class LikeController extends Controller
 {
@@ -43,8 +44,11 @@ class LikeController extends Controller
             'likeable_id'   => $request->likeable_id,
             'emoji'         => $request->emoji
         ]);
+        $likeCount = Like::where('likeable_id', $request->likeable_id)->count();
+
         if ($request->likeable_type === Post::class) {
             Post::where('id', $request->likeable_id)->increment('likes_count');
+            broadcast(new LikeUpdated($request->likeable_id, $likeCount,'Post'))->toOthers();
         }
 
         return response()->json(['like' => $like]);
@@ -91,8 +95,11 @@ class LikeController extends Controller
             'likeable_id'   => $request->likeable_id,]);
 
         $like->delete();
+
+        $likeCount = Like::where('likeable_id', $request->likeable_id)->count();
         if ($request->likeable_type === Post::class) {
             Post::where('id', $request->likeable_id)->decrement('likes_count');
+            broadcast(new LikeUpdated($request->likeable_id, $likeCount,'Post'))->toOthers();
         }
         return response()->json(['message' => 'Like deleted successfully']);
 
